@@ -155,5 +155,16 @@ def send_digest(db: Database, config: dict, top_n: int = 20, dry_run: bool = Fal
     if not smtp_config["recipient"]:
         smtp_config["recipient"] = smtp_config["sender"]
 
-    send_email(subject, html, smtp_config)
+    try:
+        send_email(subject, html, smtp_config)
+    except smtplib.SMTPAuthenticationError:
+        print("Error: SMTP authentication failed.")
+        print("For Gmail: you need an App Password, not your regular password.")
+        print("  1. Enable 2-Step Verification: https://myaccount.google.com/security")
+        print("  2. Create App Password: https://myaccount.google.com/apppasswords")
+        print("  3. Set SMTP_PASSWORD in .env to the 16-character app password")
+        return
+    except smtplib.SMTPException as e:
+        print(f"Error sending email: {e}")
+        return
     print(f"Digest sent to {smtp_config['recipient']}")

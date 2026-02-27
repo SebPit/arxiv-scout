@@ -219,3 +219,34 @@ class TestSendDigest:
         config = {}
         send_digest(db_with_papers, config, top_n=5, dry_run=True)
         # Just ensure it doesn't crash with custom top_n
+
+    def test_auth_failure_prints_helpful_error(self, db_with_papers, capsys):
+        import smtplib
+        config = {"email": {"host": "smtp.gmail.com", "port": 587}}
+        env = {
+            "SMTP_EMAIL": "test@gmail.com",
+            "SMTP_PASSWORD": "wrong-password",
+            "SMTP_RECIPIENT": "dest@gmail.com",
+        }
+        with patch.dict("os.environ", env), \
+             patch("arxiv_scout.emailer.send_email",
+                   side_effect=smtplib.SMTPAuthenticationError(535, b"BadCredentials")):
+            send_digest(db_with_papers, config)
+        captured = capsys.readouterr()
+        assert "App Password" in captured.out
+        assert "apppasswords" in captured.out
+
+    def test_smtp_generic_error_handled(self, db_with_papers, capsys):
+        import smtplib
+        config = {"email": {"host": "smtp.gmail.com", "port": 587}}
+        env = {
+            "SMTP_EMAIL": "test@gmail.com",
+            "SMTP_PASSWORD": "pass",
+            "SMTP_RECIPIENT": "dest@gmail.com",
+        }
+        with patch.dict("os.environ", env), \
+             patch("arxiv_scout.emailer.send_email",
+                   side_effect=smtplib.SMTPException("Connection refused")):
+            send_digest(db_with_papers, config)
+        captured = capsys.readouterr()
+        assert "Error sending email" in captured.out
