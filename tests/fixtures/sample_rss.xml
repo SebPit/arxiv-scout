@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns="http://purl.org/rss/1.0/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/"
+         xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<channel>
+<title>hep-ph updates on arXiv.org</title>
+<link>https://arxiv.org/</link>
+</channel>
+<item rdf:about="http://arxiv.org/abs/2602.12345v1">
+<title>A Novel Approach to Particle Physics</title>
+<link>http://arxiv.org/abs/2602.12345v1</link>
+<description>arXiv:2602.12345v1  27 Feb 2026. We present a novel method for computing cross-sections using machine learning techniques applied to high-energy physics processes.</description>
+<dc:creator>Alice Smith, Bob Jones, Charlie Brown</dc:creator>
+</item>
+<item rdf:about="http://arxiv.org/abs/2602.67890v1">
+<title>Transformers for Jet Classification</title>
+<link>http://arxiv.org/abs/2602.67890v1</link>
+<description>arXiv:2602.67890v1  27 Feb 2026. We introduce a transformer-based architecture for classifying hadronic jets at the LHC with improved accuracy over existing methods.</description>
+<dc:creator>Diana Prince, Eve Wilson</dc:creator>
+</item>
+</rdf:RDF>
