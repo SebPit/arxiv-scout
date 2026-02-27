@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # ArXiv Scout — convenience wrapper
-# Usage: ./scout run-all | fetch | enrich | score | serve | email
+# Usage: ./scout            (run pipeline + send email)
+#        ./scout fetch | enrich | score | run-all | serve | email
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

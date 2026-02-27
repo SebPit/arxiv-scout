@@ -34,8 +34,10 @@ def main():
     args = parser.parse_args()
 
     if args.command is None:
-        parser.print_help()
-        sys.exit(0)
+        # Default: run full pipeline + send email digest
+        from arxiv_scout.pipeline import run_pipeline
+        run_pipeline(args.config, args.db, send_email=True)
+        return
 
     from arxiv_scout.config import load_config
     from arxiv_scout.db import Database
