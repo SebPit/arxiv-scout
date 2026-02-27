@@ -37,6 +37,45 @@ affiliation_keywords:
   - Durham
   - Hamburg
   - DESY
+  # Cloud / AI labs
+  - AWS
+  - Amazon Science
+  - Salesforce
+  - Adobe Research
+  - IBM Research
+  - Baidu
+  - ByteDance
+  - Alibaba
+  - Tencent
+  - xAI
+  - Mistral
+  - Cohere
+  - Stability AI
+  - EleutherAI
+  # AI research orgs
+  - Allen Institute
+  - AI2
+  - Mila
+  - Vector Institute
+  - CIFAR
+  # Additional top universities
+  - Columbia
+  - Cornell
+  - NYU
+  - University of Washington
+  - Georgia Tech
+  - Toronto
+  - Montreal
+  - Imperial College
+  - UCL
+  - Edinburgh
+  - Technion
+  - Tel Aviv
+  - Weizmann
+  - RWTH Aachen
+  - Bonn
+  - Munich
+  - TU Munich
 
 scoring:
   heuristic_weight: 0.3
