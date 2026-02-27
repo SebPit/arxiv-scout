@@ -1,7 +1,0 @@
-pyproject.toml
-src/arxiv_scout/__init__.py
-src/arxiv_scout/__main__.py
-src/arxiv_scout.egg-info/PKG-INFO
-src/arxiv_scout.egg-info/SOURCES.txt
-src/arxiv_scout.egg-info/dependency_links.txt
-src/arxiv_scout.egg-info/top_level.txt
