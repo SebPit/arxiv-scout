@@ -1,0 +1,31 @@
+[
+    {
+        "paperId": "abc123",
+        "externalIds": {"ArXiv": "2602.12345"},
+        "citationCount": 5,
+        "authors": [
+            {
+                "authorId": "111",
+                "name": "Alice Smith",
+                "affiliations": ["Google DeepMind"],
+                "hIndex": 45,
+                "citationCount": 12000
+            },
+            {
+                "authorId": "222",
+                "name": "Bob Jones",
+                "affiliations": ["MIT"],
+                "hIndex": 30,
+                "citationCount": 5000
+            },
+            {
+                "authorId": "333",
+                "name": "Charlie Brown",
+                "affiliations": ["University of Somewhere"],
+                "hIndex": 8,
+                "citationCount": 200
+            }
+        ]
+    },
+    null
+]
