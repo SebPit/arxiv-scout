@@ -113,13 +113,14 @@ def test_score_with_llm_empty_abstract():
 # --- score_papers orchestration ---
 
 def test_score_papers_no_unscored(tmp_db):
-    """score_papers does nothing when all papers are already scored."""
+    """score_papers does nothing when all papers already have combined_score."""
     db = Database(tmp_db)
     pid = db.insert_paper(arxiv_id="2602.11111", title="A", abstract="", categories="", published_date="", arxiv_url="")
     db.update_heuristic_score(pid, 5.0)
+    db.update_combined_score(pid, 2.0)  # already fully scored
 
     config = {"scoring": {"heuristic_weight": 0.4, "llm_weight": 0.6, "min_heuristic_score_for_llm": 3, "max_papers_per_day": 10}, "anthropic": {"model": "test"}}
-    # Should not raise
+    # Should return early without touching Anthropic
     score_papers(db, config)
 
 

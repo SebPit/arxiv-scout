@@ -1,5 +1,6 @@
 import json
 import math
+import re
 from datetime import datetime, timezone
 
 import anthropic
@@ -26,9 +27,20 @@ def compute_heuristic_score(
 
 
 def parse_llm_response(text: str) -> tuple:
-    """Parse LLM JSON response. Returns (score, summary) or (None, None)."""
+    """Parse LLM JSON response. Returns (score, summary) or (None, None).
+
+    Handles both raw JSON and markdown-fenced JSON (```json ... ```).
+    """
     try:
-        data = json.loads(text)
+        # Strip markdown code fences if present
+        cleaned = text.strip()
+        if cleaned.startswith("```"):
+            # Remove opening fence (```json or ```)
+            cleaned = re.sub(r'^```\w*\n?', '', cleaned)
+            # Remove closing fence
+            cleaned = re.sub(r'\n?```$', '', cleaned)
+            cleaned = cleaned.strip()
+        data = json.loads(cleaned)
         score = int(data["score"])
         score = max(0, min(10, score))  # clamp
         summary = str(data.get("summary", ""))
@@ -65,19 +77,14 @@ def score_with_llm(
 
 def score_papers(db, config: dict):
     """Orchestrate scoring: heuristic for all, LLM for top candidates."""
-    from arxiv_scout.db import Database
-
-    unscored = db.get_unscored_papers()
-    if not unscored:
-        return
-
     weights = config.get("scoring", {})
     h_weight = weights.get("heuristic_weight", 0.4)
     l_weight = weights.get("llm_weight", 0.6)
     threshold = weights.get("min_heuristic_score_for_llm", 3)
     max_llm = weights.get("max_papers_per_day", 100)
 
-    # Phase 1: Heuristic scoring
+    # Phase 1: Heuristic scoring for papers that don't have one yet
+    unscored = db.get_unscored_papers()
     for paper in unscored:
         authors = db.get_paper_authors(paper["id"])
         all_keywords = set()
@@ -94,39 +101,37 @@ def score_papers(db, config: dict):
         )
         db.update_heuristic_score(paper["id"], h_score)
 
-    # Phase 2: LLM scoring for papers above threshold
+    # Phase 2: LLM scoring + combined scores for papers missing combined_score
+    needs_combined = db.execute(
+        "SELECT * FROM papers WHERE combined_score IS NULL AND heuristic_score IS NOT NULL"
+    ).fetchall()
+    needs_combined = [dict(row) for row in needs_combined]
+
+    if not needs_combined:
+        return
+
+    # Try to create Anthropic client for LLM scoring
     model = config.get("anthropic", {}).get("model", "claude-haiku-4-5-20251001")
+    client = None
     try:
         client = anthropic.Anthropic()
     except Exception:
         print("Warning: Could not create Anthropic client. Skipping LLM scoring.")
-        # Still compute combined scores with heuristic only
-        for paper in unscored:
-            p = db.get_paper_by_arxiv_id(paper["arxiv_id"])
-            if p and p["heuristic_score"] is not None:
-                db.update_combined_score(p["id"], p["heuristic_score"])
-        return
 
     llm_count = 0
-    for paper in unscored:
-        p = db.get_paper_by_arxiv_id(paper["arxiv_id"])
-        if not p or (p["heuristic_score"] or 0) < threshold:
-            # Below threshold -- combined = heuristic only
-            if p and p["heuristic_score"] is not None:
-                db.update_combined_score(p["id"], p["heuristic_score"] * h_weight)
-            continue
-        if llm_count >= max_llm:
-            if p["heuristic_score"] is not None:
-                db.update_combined_score(p["id"], p["heuristic_score"] * h_weight)
-            continue
+    for paper in needs_combined:
+        h_score = paper["heuristic_score"]
 
-        llm_score, summary = score_with_llm(
-            client, model, p["title"], p["abstract"] or "", p["categories"] or ""
-        )
-        if llm_score is not None:
-            db.update_llm_score(p["id"], llm_score, summary)
-            combined = h_weight * p["heuristic_score"] + l_weight * llm_score
-            db.update_combined_score(p["id"], round(combined, 2))
-        else:
-            db.update_combined_score(p["id"], p["heuristic_score"] * h_weight)
-        llm_count += 1
+        if client and h_score >= threshold and llm_count < max_llm:
+            llm_score, summary = score_with_llm(
+                client, model, paper["title"], paper["abstract"] or "", paper["categories"] or ""
+            )
+            if llm_score is not None:
+                db.update_llm_score(paper["id"], llm_score, summary)
+                combined = h_weight * h_score + l_weight * llm_score
+                db.update_combined_score(paper["id"], round(combined, 2))
+                llm_count += 1
+                continue
+
+        # No LLM score — combined is heuristic-weighted only
+        db.update_combined_score(paper["id"], round(h_score * h_weight, 2))

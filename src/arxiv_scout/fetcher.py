@@ -17,9 +17,13 @@ def parse_arxiv_feed(xml_content: str) -> list[dict]:
             continue
         arxiv_id = match.group(1)
 
-        # Clean abstract: remove "arXiv:XXXX.XXXXXvN  DD Mon YYYY. " prefix
+        # Clean abstract: strip arXiv metadata prefix
+        # Format varies: "arXiv:XXXX.XXXXXvN Announce Type: new \nAbstract: ..."
+        #            or: "arXiv:XXXX.XXXXXvN  DD Mon YYYY. ..."
         description = entry.get("description", entry.get("summary", ""))
-        abstract = re.sub(r'^arXiv:\S+\s+\d{1,2}\s+\w+\s+\d{4}\.\s*', '', description).strip()
+        abstract = re.sub(r'^arXiv:\S+\s+Announce Type:\s*\w+\s*', '', description).strip()
+        abstract = re.sub(r'^Abstract:\s*', '', abstract).strip()
+        abstract = re.sub(r'^arXiv:\S+\s+\d{1,2}\s+\w+\s+\d{4}\.\s*', '', abstract).strip()
         # Strip any HTML tags
         abstract = re.sub(r'<[^>]+>', '', abstract).strip()
 

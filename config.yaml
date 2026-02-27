@@ -10,7 +10,6 @@ affiliation_keywords:
   - Meta AI
   - FAIR
   - Microsoft Research
-  - CERN
   - MIT
   - Stanford
   - Berkeley
@@ -18,11 +17,31 @@ affiliation_keywords:
   - Harvard
   - Caltech
   - ETH Zurich
+  - ETH
+  - CMU
+  - Carnegie Mellon
+  - Oxford
+  - Cambridge
+  - EPFL
+  - KAIST
+  - Tsinghua
+  - Peking University
+  - NVIDIA
+  - Apple
+  - Amazon
+  - Samsung
+  - Huawei
+  - INRIA
+  - Max Planck
+  - Heidelberg
+  - Durham
+  - Hamburg
+  - DESY
 
 scoring:
-  heuristic_weight: 0.4
-  llm_weight: 0.6
-  min_heuristic_score_for_llm: 3
+  heuristic_weight: 0.3
+  llm_weight: 0.7
+  min_heuristic_score_for_llm: 1
   max_papers_per_day: 100
 
 anthropic:
