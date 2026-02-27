@@ -1,0 +1,40 @@
+categories:
+  - hep-ph
+  - cs.LG
+
+affiliation_keywords:
+  - Google
+  - DeepMind
+  - OpenAI
+  - Anthropic
+  - Meta AI
+  - FAIR
+  - Microsoft Research
+  - CERN
+  - MIT
+  - Stanford
+  - Berkeley
+  - Princeton
+  - Harvard
+  - Caltech
+  - ETH Zurich
+
+scoring:
+  heuristic_weight: 0.4
+  llm_weight: 0.6
+  min_heuristic_score_for_llm: 3
+  max_papers_per_day: 100
+
+anthropic:
+  model: claude-haiku-4-5-20251001
+
+semantic_scholar:
+  api_key: ${SEMANTIC_SCHOLAR_API_KEY}
+  batch_size: 500
+
+server:
+  port: 5000
+  host: 127.0.0.1
+
+schedule:
+  fetch_time: "06:00"
