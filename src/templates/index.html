@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="filters">
+    <form method="get" action="/">
+        <label>Category:
+            <select name="category">
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>
+                    {{ cat if cat else "All" }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Min Score:
+            <input type="number" name="min_score" value="{{ min_score }}" min="0" max="10" step="0.5">
+        </label>
+        <label>Sort by:
+            <select name="sort">
+                {% for s in ["combined_score", "published_date", "citation_count", "heuristic_score", "llm_score"] %}
+                <option value="{{ s }}" {% if s == sort %}selected{% endif %}>{{ s.replace('_', ' ').title() }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button type="submit">Filter</button>
+    </form>
+</section>
+
+{% if papers %}
+<section class="paper-list">
+    {% for paper in papers %}
+    <article class="paper-card">
+        <div class="paper-header">
+            <div class="score-badge score-{{ 'high' if (paper.combined_score or 0) >= 7 else ('mid' if (paper.combined_score or 0) >= 4 else 'low') }}">
+                {{ "%.1f"|format(paper.combined_score or 0) }}
+            </div>
+            <div class="paper-title-section">
+                <h2><a href="{{ paper.arxiv_url }}" target="_blank">{{ paper.title }}</a></h2>
+                <div class="paper-meta">
+                    <span class="category-tag">{{ paper.categories }}</span>
+                    <span class="date">{{ paper.published_date }}</span>
+                    {% if paper.citation_count %}<span class="citations">{{ paper.citation_count }} citations</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="authors">
+            {% for author in paper.author_details %}
+            <span class="author {% if author.matched_keywords %}highlighted{% endif %}"
+                  title="h-index: {{ author.h_index or '?' }}{% if author.affiliations %} | {{ author.affiliations|join(', ') }}{% endif %}">
+                {{ author.name }}{% if author.matched_keywords %} <span class="affiliation-badge">{{ author.matched_keywords|join(', ') }}</span>{% endif %}
+            </span>{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+        <details>
+            <summary>Abstract &amp; Analysis</summary>
+            <div class="abstract">{{ paper.abstract }}</div>
+            {% if paper.llm_summary %}
+            <div class="llm-summary">
+                <strong>AI Assessment:</strong> {{ paper.llm_summary }}
+                <span class="scores-detail">
+                    (Heuristic: {{ "%.1f"|format(paper.heuristic_score or 0) }} | LLM: {{ "%.1f"|format(paper.llm_score or 0) }})
+                </span>
+            </div>
+            {% endif %}
+        </details>
+    </article>
+    {% endfor %}
+</section>
+
+<nav class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page - 1 }}&category={{ category }}&min_score={{ min_score }}&sort={{ sort }}">&laquo; Previous</a>
+    {% endif %}
+    <span>Page {{ page }}</span>
+    {% if papers|length == 50 %}
+    <a href="?page={{ page + 1 }}&category={{ category }}&min_score={{ min_score }}&sort={{ sort }}">Next &raquo;</a>
+    {% endif %}
+</nav>
+{% else %}
+<div class="empty-state">
+    <h2>No papers found</h2>
+    <p>Try adjusting your filters, or run the pipeline to fetch papers:</p>
+    <code>python -m arxiv_scout run-all</code>
+</div>
+{% endif %}
+{% endblock %}

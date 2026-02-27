@@ -319,6 +319,7 @@ class Database:
             "llm_score",
             "published_date",
             "fetched_at",
+            "citation_count",
         }
         if order_by not in allowed_order:
             order_by = "combined_score"
