@@ -1,6 +1,15 @@
 """CLI entry point: python -m arxiv_scout"""
 import argparse
+import os
 import sys
+
+# Auto-load .env file (looks in cwd and parent dirs)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 
 def main():
     parser = argparse.ArgumentParser(prog="arxiv-scout", description="Discover influential arXiv papers")
@@ -17,6 +26,10 @@ def main():
     serve_parser = sub.add_parser("serve", help="Start web dashboard")
     serve_parser.add_argument("--port", type=int, default=None, help="Override port")
     serve_parser.add_argument("--no-scheduler", action="store_true", help="Disable scheduled fetching")
+
+    email_parser = sub.add_parser("email", help="Send email digest of top papers")
+    email_parser.add_argument("--top", type=int, default=20, help="Number of top papers to include")
+    email_parser.add_argument("--dry-run", action="store_true", help="Print email HTML instead of sending")
 
     args = parser.parse_args()
 
@@ -51,6 +64,11 @@ def main():
     elif args.command == "run-all":
         from arxiv_scout.pipeline import run_pipeline
         run_pipeline(args.config, args.db)
+
+    elif args.command == "email":
+        from arxiv_scout.emailer import send_digest
+        db = Database(args.db)
+        send_digest(db, config, top_n=args.top, dry_run=args.dry_run)
 
     elif args.command == "serve":
         from arxiv_scout.app import create_app

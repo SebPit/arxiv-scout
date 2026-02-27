@@ -4,8 +4,8 @@ from arxiv_scout.fetcher import fetch_papers
 from arxiv_scout.enricher import enrich_papers
 from arxiv_scout.scorer import score_papers
 
-def run_pipeline(config_path: str, db_path: str = "arxiv_scout.db"):
-    """Run the full fetch -> enrich -> score pipeline."""
+def run_pipeline(config_path: str, db_path: str = "arxiv_scout.db", send_email: bool = False):
+    """Run the full fetch -> enrich -> score pipeline, optionally send digest."""
     config = load_config(config_path)
     db = Database(db_path)
 
@@ -28,5 +28,10 @@ def run_pipeline(config_path: str, db_path: str = "arxiv_scout.db"):
     # Score
     score_papers(db, config)
     print("Scoring complete")
+
+    # Email digest (optional)
+    if send_email and config.get("email", {}).get("enabled", False):
+        from arxiv_scout.emailer import send_digest
+        send_digest(db, config)
 
     print("=== Pipeline complete ===")

@@ -96,3 +96,11 @@ server:
 
 schedule:
   fetch_time: "06:00"
+
+email:
+  enabled: false
+  sender: ${SMTP_EMAIL}
+  recipient: ${SMTP_RECIPIENT}
+  password: ${SMTP_PASSWORD}
+  host: smtp.gmail.com
+  port: 587

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# ArXiv Scout — convenience wrapper
+# Usage: ./scout run-all | fetch | enrich | score | serve | email
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/.venv"
+
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Error: virtualenv not found at $VENV_DIR"
+    echo "Run:  python -m venv .venv && .venv/bin/pip install -r requirements.txt"
+    exit 1
+fi
+
+# Activate venv and run the module with all arguments forwarded
+exec "$VENV_DIR/bin/python" -m arxiv_scout "$@"
