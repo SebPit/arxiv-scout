@@ -9,9 +9,15 @@ from email.mime.text import MIMEText
 from arxiv_scout.db import Database
 
 
-def build_digest_html(db: Database, top_n: int = 20) -> str:
-    """Build an HTML email digest of the top-scored papers."""
-    papers = db.get_papers(min_score=0, order_by="combined_score", limit=top_n)
+def build_digest_html(db: Database, top_n: int = 20, since: str | None = None) -> str:
+    """Build an HTML email digest of the top-scored papers.
+
+    If *since* is given (ISO date), only papers fetched on or after that date
+    are included. Defaults to today (UTC) so daily runs only show new papers.
+    """
+    if since is None:
+        since = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    papers = db.get_papers(min_score=0, order_by="combined_score", limit=top_n, since=since)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     rows = []
@@ -127,9 +133,9 @@ def send_email(subject: str, html_body: str, smtp_config: dict) -> None:
         server.sendmail(sender, [recipient], msg.as_string())
 
 
-def send_digest(db: Database, config: dict, top_n: int = 20, dry_run: bool = False) -> None:
+def send_digest(db: Database, config: dict, top_n: int = 20, dry_run: bool = False, since: str | None = None) -> None:
     """Build and send (or print) the daily digest."""
-    html = build_digest_html(db, top_n=top_n)
+    html = build_digest_html(db, top_n=top_n, since=since)
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     subject = f"ArXiv Scout Digest — {today}"
 

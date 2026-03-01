@@ -306,11 +306,14 @@ class Database:
         order_by: str = "combined_score",
         limit: int = 50,
         offset: int = 0,
+        since: str | None = None,
     ) -> list[dict]:
         """Query papers for the dashboard.
 
         Returns papers ordered descending by the chosen column, filtered by
         minimum combined_score and optionally by category substring match.
+        If *since* is given (ISO date string like '2026-03-01'), only papers
+        fetched on or after that date are included.
         """
         # Whitelist allowed order_by columns to prevent SQL injection
         allowed_order = {
@@ -330,6 +333,10 @@ class Database:
         if category is not None:
             conditions.append("categories LIKE ?")
             params.append(f"%{category}%")
+
+        if since is not None:
+            conditions.append("fetched_at >= ?")
+            params.append(since)
 
         where_clause = " AND ".join(conditions)
         params.extend([limit, offset])

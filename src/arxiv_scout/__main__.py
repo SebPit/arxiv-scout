@@ -68,6 +68,7 @@ def main():
         print("Scoring complete")
 
     elif args.command == "backfill":
+        from datetime import datetime, timedelta, timezone
         from arxiv_scout.fetcher import backfill_papers
         from arxiv_scout.enricher import enrich_papers
         from arxiv_scout.scorer import score_papers
@@ -83,7 +84,8 @@ def main():
         print("Scoring complete")
         if config.get("email", {}).get("enabled", False):
             from arxiv_scout.emailer import send_digest
-            send_digest(db, config)
+            backfill_since = (datetime.now(timezone.utc) - timedelta(days=args.days)).strftime("%Y-%m-%d")
+            send_digest(db, config, since=backfill_since)
 
     elif args.command == "run-all":
         from arxiv_scout.pipeline import run_pipeline
