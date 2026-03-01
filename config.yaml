@@ -77,6 +77,22 @@ affiliation_keywords:
   - Munich
   - TU Munich
 
+research_interests:
+  boost:
+    - machine learning methods applied to physics (neural networks, deep learning for HEP)
+    - generative models for particle physics (normalizing flows, diffusion models, GANs for event generation)
+    - simulation-based inference, likelihood-free inference, neural posterior estimation
+    - symbolic regression, automated theory discovery, equation learning
+    - graph neural networks for jet physics, point clouds, particle tracking
+    - foundation models and transformers applied to scientific data
+    - differentiable programming and differentiable simulation in physics
+    - anomaly detection with ML in collider data
+  penalize:
+    - purely experimental measurements and detector calibration without ML methodology
+    - standard model parameter fits and extractions without methodological novelty
+    - phenomenological scans with conventional statistical methods only
+    - beam physics, accelerator engineering, detector hardware
+
 scoring:
   heuristic_weight: 0.3
   llm_weight: 0.7
@@ -98,7 +114,7 @@ schedule:
   fetch_time: "06:00"
 
 email:
-  enabled: false
+  enabled: true
   sender: ${SMTP_EMAIL}
   recipient: ${SMTP_RECIPIENT}
   password: ${SMTP_PASSWORD}

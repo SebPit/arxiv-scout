@@ -49,20 +49,37 @@ def parse_llm_response(text: str) -> tuple:
         return None, None
 
 
+def _build_scoring_prompt(interests: dict | None) -> str:
+    """Build the LLM system prompt, optionally including research interests."""
+    base = (
+        "You are a research paper evaluator. Rate this paper's novelty and "
+        'potential impact. Respond with JSON only: {"score": <1-10>, "summary": '
+        '"<2-3 sentence assessment>"}\n'
+        "Score guide: 1-3=incremental, 4-6=solid contribution, 7-8=significant, "
+        "9-10=potentially groundbreaking"
+    )
+    if not interests:
+        return base
+
+    parts = [base, "\nYour evaluation should reflect these research preferences:"]
+    boost = interests.get("boost", [])
+    penalize = interests.get("penalize", [])
+    if boost:
+        parts.append("BOOST (score higher) papers about: " + "; ".join(boost))
+    if penalize:
+        parts.append("PENALIZE (score lower) papers about: " + "; ".join(penalize))
+    return "\n".join(parts)
+
+
 def score_with_llm(
-    client, model: str, title: str, abstract: str, categories: str
+    client, model: str, title: str, abstract: str, categories: str,
+    interests: dict | None = None,
 ) -> tuple:
     """Score a paper using Claude. Returns (score, summary)."""
     message = client.messages.create(
         model=model,
         max_tokens=256,
-        system=(
-            "You are a research paper evaluator. Rate this paper's novelty and "
-            'potential impact. Respond with JSON only: {"score": <1-10>, "summary": '
-            '"<2-3 sentence assessment>"}\n'
-            "Score guide: 1-3=incremental, 4-6=solid contribution, 7-8=significant, "
-            "9-10=potentially groundbreaking"
-        ),
+        system=_build_scoring_prompt(interests),
         messages=[
             {
                 "role": "user",
@@ -112,6 +129,7 @@ def score_papers(db, config: dict):
 
     # Try to create Anthropic client for LLM scoring
     model = config.get("anthropic", {}).get("model", "claude-haiku-4-5-20251001")
+    interests = config.get("research_interests")
     client = None
     try:
         client = anthropic.Anthropic()
@@ -132,7 +150,8 @@ def score_papers(db, config: dict):
 
         if client and eligible and llm_count < max_llm:
             llm_score, summary = score_with_llm(
-                client, model, paper["title"], paper["abstract"] or "", paper["categories"] or ""
+                client, model, paper["title"], paper["abstract"] or "", paper["categories"] or "",
+                interests=interests,
             )
             if llm_score is not None:
                 db.update_llm_score(paper["id"], llm_score, summary)
