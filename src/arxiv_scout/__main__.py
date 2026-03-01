@@ -27,6 +27,10 @@ def main():
     serve_parser.add_argument("--port", type=int, default=None, help="Override port")
     serve_parser.add_argument("--no-scheduler", action="store_true", help="Disable scheduled fetching")
 
+    backfill_parser = sub.add_parser("backfill", help="Fetch papers from the last N days via arXiv API")
+    backfill_parser.add_argument("--days", type=int, required=True, help="Number of days to look back")
+    backfill_parser.add_argument("--category", type=str, default=None, help="Limit to a single category (default: all configured)")
+
     email_parser = sub.add_parser("email", help="Send email digest of top papers")
     email_parser.add_argument("--top", type=int, default=20, help="Number of top papers to include")
     email_parser.add_argument("--dry-run", action="store_true", help="Print email HTML instead of sending")
@@ -60,6 +64,21 @@ def main():
     elif args.command == "score":
         from arxiv_scout.scorer import score_papers
         db = Database(args.db)
+        score_papers(db, config)
+        print("Scoring complete")
+
+    elif args.command == "backfill":
+        from arxiv_scout.fetcher import backfill_papers
+        from arxiv_scout.enricher import enrich_papers
+        from arxiv_scout.scorer import score_papers
+        db = Database(args.db)
+        categories = [args.category] if args.category else config["categories"]
+        print(f"Backfilling last {args.days} days for {categories}...")
+        count = backfill_papers(db, categories, args.days)
+        print(f"Fetched {count} new papers")
+        s2 = config.get("semantic_scholar", {})
+        enrich_papers(db, config["affiliation_keywords"], api_key=s2.get("api_key"), batch_size=s2.get("batch_size", 500))
+        print("Enrichment complete")
         score_papers(db, config)
         print("Scoring complete")
 

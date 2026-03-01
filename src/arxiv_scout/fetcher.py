@@ -2,8 +2,12 @@ import re
 import time
 import requests
 import feedparser
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from arxiv_scout.db import Database
+
+ARXIV_API_URL = "https://export.arxiv.org/api/query"
+ARXIV_API_PAGE_SIZE = 100
+ARXIV_API_DELAY = 3  # seconds between requests (arXiv policy)
 
 def parse_arxiv_feed(xml_content: str) -> list[dict]:
     """Parse arXiv RSS/RDF feed into paper dicts."""
@@ -69,4 +73,82 @@ def fetch_papers(db: Database, categories: list[str]) -> int:
                     author_id = db.upsert_author(name=name, semantic_scholar_id=None, h_index=None, citation_count=None)
                     db.link_paper_author(paper_id, author_id, position=i)
         time.sleep(1)  # Be polite to arXiv
+    return total_new
+
+
+def backfill_papers(db: Database, categories: list[str], days: int) -> int:
+    """Fetch papers from the last N days using the arXiv Search API.
+
+    Unlike fetch_papers() which uses the RSS feed (today only), this queries
+    the arXiv Search API with a submittedDate range filter and paginates
+    through all results.
+    """
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=days)
+    date_from = start.strftime("%Y%m%d")
+    date_to = end.strftime("%Y%m%d")
+
+    total_new = 0
+    for category in categories:
+        query = f"cat:{category} AND submittedDate:[{date_from} TO {date_to}]"
+        offset = 0
+
+        while True:
+            params = {
+                "search_query": query,
+                "start": offset,
+                "max_results": ARXIV_API_PAGE_SIZE,
+                "sortBy": "submittedDate",
+                "sortOrder": "descending",
+            }
+            resp = requests.get(ARXIV_API_URL, params=params, timeout=30)
+            resp.raise_for_status()
+            feed = feedparser.parse(resp.text)
+
+            total_results = int(feed.feed.get("opensearch_totalresults", 0))
+            if not feed.entries:
+                break
+
+            for entry in feed.entries:
+                # Extract arXiv ID from entry id (e.g. http://arxiv.org/abs/2602.23348v1)
+                match = re.search(r'(\d{4}\.\d{4,5})', entry.get("id", ""))
+                if not match:
+                    continue
+                arxiv_id = match.group(1)
+
+                # Categories from tags
+                tags = entry.get("tags", [])
+                cats = ",".join(t.get("term", "") for t in tags)
+
+                # Authors
+                authors = [a.get("name", "") for a in entry.get("authors", [])]
+
+                # Published date
+                published = entry.get("published", "")[:10]
+
+                paper_id = db.insert_paper(
+                    arxiv_id=arxiv_id,
+                    title=" ".join(entry.get("title", "").split()),
+                    abstract=entry.get("summary", "").strip(),
+                    categories=cats,
+                    published_date=published,
+                    arxiv_url=f"https://arxiv.org/abs/{arxiv_id}",
+                )
+                if paper_id is not None:
+                    total_new += 1
+                    for i, name in enumerate(authors):
+                        author_id = db.upsert_author(
+                            name=name, semantic_scholar_id=None,
+                            h_index=None, citation_count=None,
+                        )
+                        db.link_paper_author(paper_id, author_id, position=i)
+
+            offset += ARXIV_API_PAGE_SIZE
+            if offset >= total_results:
+                break
+            time.sleep(ARXIV_API_DELAY)
+
+        print(f"  {category}: {total_results} total, page offset {offset}")
+        time.sleep(ARXIV_API_DELAY)
+
     return total_new

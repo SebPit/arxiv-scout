@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: cat:hep-ph AND submittedDate:[20260224 TO 20260228]</title>
+  <id>http://arxiv.org/api/query</id>
+  <opensearch:totalResults>3</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>100</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2602.11111v1</id>
+    <title>Dark Matter Scattering in
+  the Early Universe</title>
+    <summary>We study the scattering of dark matter particles in the early universe using novel lattice techniques.</summary>
+    <published>2026-02-25T18:00:00Z</published>
+    <updated>2026-02-25T18:00:00Z</updated>
+    <author><name>Alice Researcher</name></author>
+    <author><name>Bob Scientist</name></author>
+    <category term="hep-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="https://arxiv.org/abs/2602.11111v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.22222v1</id>
+    <title>Higgs Boson Pair Production at NNLO</title>
+    <summary>We compute the full NNLO corrections to Higgs boson pair production at the LHC.</summary>
+    <published>2026-02-26T14:30:00Z</published>
+    <updated>2026-02-26T14:30:00Z</updated>
+    <author><name>Charlie Physicist</name></author>
+    <category term="hep-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="https://arxiv.org/abs/2602.22222v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2602.33333v1</id>
+    <title>Jet Substructure with Graph Networks</title>
+    <summary>We apply graph neural networks to jet substructure observables at the LHC.</summary>
+    <published>2026-02-27T10:00:00Z</published>
+    <updated>2026-02-27T10:00:00Z</updated>
+    <author><name>Diana Theorist</name></author>
+    <author><name>Eve Experimentalist</name></author>
+    <author><name>Frank Postdoc</name></author>
+    <category term="hep-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="https://arxiv.org/abs/2602.33333v1" rel="alternate" type="text/html"/>
+  </entry>
+</feed>
