@@ -121,8 +121,16 @@ def score_papers(db, config: dict):
     llm_count = 0
     for paper in needs_combined:
         h_score = paper["heuristic_score"]
+        # Papers attempted on Semantic Scholar but not found have an
+        # artificially low heuristic (no author metadata).  Always send
+        # them to the LLM so they get a fair score based on title + abstract.
+        s2_attempted_not_found = (
+            paper["enrichment_attempted_at"] is not None
+            and paper["enrichment_found"] == 0
+        )
+        eligible = h_score >= threshold or s2_attempted_not_found
 
-        if client and h_score >= threshold and llm_count < max_llm:
+        if client and eligible and llm_count < max_llm:
             llm_score, summary = score_with_llm(
                 client, model, paper["title"], paper["abstract"] or "", paper["categories"] or ""
             )
