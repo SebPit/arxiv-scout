@@ -81,6 +81,9 @@ def main():
         print("Enrichment complete")
         score_papers(db, config)
         print("Scoring complete")
+        if config.get("email", {}).get("enabled", False):
+            from arxiv_scout.emailer import send_digest
+            send_digest(db, config)
 
     elif args.command == "run-all":
         from arxiv_scout.pipeline import run_pipeline
